@@ -43,7 +43,9 @@ class SceneCfg(InteractiveSceneCfg):
         spawn=sim_utils.UsdFileCfg(
             usd_path=f"{ISAAC_NUCLEUS_DIR}/Props/Mounts/SeattleLabTable/table_instanceable.usd",
         ),
-        init_state=AssetBaseCfg.InitialStateCfg(pos=(0.55, 0.0, 0.0), rot=(0.70711, 0.0, 0.0, 0.70711)),
+        init_state=AssetBaseCfg.InitialStateCfg(
+            pos=(0.55, 0.0, 0.0), rot=(0.70711, 0.0, 0.0, 0.70711)
+        ),
     )
 
     # robots
@@ -87,7 +89,7 @@ class ActionsCfg:
 
     # TODO: scale, clip
     arm_action: ActionTerm = mdp.RelativeJointPositionActionCfg(
-        asset_name="robot", joint_names=[".*"], scale=0.1, clip={".*": (-1.0, 1.0)}
+        asset_name="robot", joint_names=[".*"], scale=0.2, clip={".*": (-1.57, 1.57)}
     )
     gripper_action: ActionTerm | None = None
 
@@ -101,9 +103,15 @@ class ObservationsCfg:
         """Observations for policy group."""
 
         # observation terms (order preserved)
-        joint_pos = ObsTerm(func=mdp.joint_pos_rel, noise=Unoise(n_min=-0.01, n_max=0.01))
-        joint_vel = ObsTerm(func=mdp.joint_vel_rel, noise=Unoise(n_min=-0.01, n_max=0.01))
-        pose_command = ObsTerm(func=mdp.generated_commands, params={"command_name": "ee_pose"})
+        joint_pos = ObsTerm(
+            func=mdp.joint_pos_rel, noise=Unoise(n_min=-0.01, n_max=0.01)
+        )
+        joint_vel = ObsTerm(
+            func=mdp.joint_vel_rel, noise=Unoise(n_min=-0.01, n_max=0.01)
+        )
+        pose_command = ObsTerm(
+            func=mdp.generated_commands, params={"command_name": "ee_pose"}
+        )
         actions = ObsTerm(func=mdp.last_action)
 
         def __post_init__(self) -> None:
@@ -137,7 +145,7 @@ class RewardsCfg:
     # task terms
     end_effector_position_tracking = RewTerm(
         func=task_mdp.position_command_error,
-        weight=1.0,
+        weight=1,
         params={
             "asset_cfg": SceneEntityCfg("robot", body_names="gripper_link"),
             "command_name": "ee_pose",
@@ -146,7 +154,7 @@ class RewardsCfg:
     )
     end_effector_position_tracking_fine_grained = RewTerm(
         func=task_mdp.position_command_error,
-        weight=1.0,
+        weight=2,
         params={
             "asset_cfg": SceneEntityCfg("robot", body_names="gripper_link"),
             "command_name": "ee_pose",
@@ -155,7 +163,7 @@ class RewardsCfg:
     )
     end_effector_orientation_tracking = RewTerm(
         func=task_mdp.orientation_command_error,
-        weight=1.0,
+        weight=1,
         params={
             "asset_cfg": SceneEntityCfg("robot", body_names="gripper_link"),
             "command_name": "ee_pose",
@@ -164,21 +172,18 @@ class RewardsCfg:
     )
 
     # penalty terms
-    action_rate = RewTerm(
-        func=task_mdp.action_rate_l2,
-        weight=-1.0
-    )
+    action_rate = RewTerm(func=task_mdp.action_rate_l2, weight=-0.0001)
     joint_vel = RewTerm(
         func=task_mdp.joint_vel_l2,
-        weight=-1.0,
+        weight=-0.0001,
     )
     joint_acc = RewTerm(
         func=task_mdp.joint_acc_l2,
-        weight=-0.001,
+        weight=-0.00001,
     )
     joint_torque = RewTerm(
         func=task_mdp.joint_torques_l2,
-        weight=-1.0,
+        weight=-0.00001,
     )
 
 
@@ -207,7 +212,9 @@ class ReachTaskCfg(ManagerBasedRLEnvCfg):
 
     # Scene settings
     scene: SceneCfg = SceneCfg(num_envs=4096, env_spacing=2.5)
-    viewer: ViewerCfg = ViewerCfg(eye=(1.0, -1.0, 0.5), origin_type="asset_root", asset_name="robot")
+    viewer: ViewerCfg = ViewerCfg(
+        eye=(1.0, -1.0, 0.5), origin_type="asset_root", asset_name="robot"
+    )
     # Basic settings
     observations: ObservationsCfg = ObservationsCfg()
     actions: ActionsCfg = ActionsCfg()
